@@ -44,6 +44,7 @@ import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
 import org.hibernate.Session
 import grails.util.Environment
+import org.codehaus.groovy.grails.commons.DefaultGrailsDomainClass
 
 public class AuditLogListener implements PreDeleteEventListener, PostInsertEventListener, PostUpdateEventListener, Initializable {
 	// set on startup
@@ -255,14 +256,25 @@ public class AuditLogListener implements PreDeleteEventListener, PostInsertEvent
 	List ignoreList(entity) {
 		def ignore = ['version', 'lastUpdated']
 		if (entity?.metaClass?.hasProperty(entity, 'auditable')) {
-			if (entity.auditable instanceof java.util.Map && entity.auditable.containsKey('ignore')) {
-				log.debug "found an ignore list one this entity ${entity.getClass()}"
-				def list = entity.auditable['ignore']
-				if (list instanceof java.util.List) {
-					ignore = list
-				}
+			if (entity.auditable instanceof java.util.Map) {
+                if (entity.auditable.containsKey('ignore')) {
+    				log.debug "found an ignore list one this entity ${entity.getClass()}"
+    				def list = entity.auditable['ignore']
+    				if (list instanceof java.util.List) {
+    					ignore = list
+    				}
+                }
+                else if (entity.auditable.containsKey('include')) { 
+                    log.debug "found an include list one this entity ${entity.getClass()}"
+                    def list = entity.auditable['include']
+                    if (list instanceof List) {
+                        def d = new DefaultGrailsDomainClass(entity.class)
+                        ignore = (d?.persistentProperties?.name ?: ignore) - list
+                    }
+                }
 			}
 		}
+        println "ignore = $ignore"
 		return ignore
 	}
 
