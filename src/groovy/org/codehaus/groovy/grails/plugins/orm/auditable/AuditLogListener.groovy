@@ -274,7 +274,6 @@ public class AuditLogListener implements PreDeleteEventListener, PostInsertEvent
                 }
 			}
 		}
-        println "ignore = $ignore"
 		return ignore
 	}
 
